@@ -1,4 +1,4 @@
-# Descarga de Resoluciones — Gerencia de Catastro
+# Automatización BCGS — Gerencia de Catastro
 
 Aplicación web que automatiza la descarga mensual de resoluciones catastrales desde la plataforma **BCGS** y su envío masivo por correo electrónico a los **113 municipios de Antioquia**, con monitoreo en tiempo real, trazabilidad e historial de ejecuciones.
 
