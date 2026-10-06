@@ -271,7 +271,7 @@ function PanelUsuarios() {
               <Select
                 options={[
                   { label: 'Administrador (Control total)', value: 'administrador' },
-                  { label: 'Usuario (Operador)', value: 'usuario' },
+                  { label: 'Usuario', value: 'usuario' },
                 ]}
               />
             </Form.Item>
