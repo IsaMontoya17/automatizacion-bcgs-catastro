@@ -104,11 +104,6 @@ function contarPorEstatus(filas) {
   }, {});
 }
 
-/**
- * Construye el detalle completo (municipio por municipio) de una ejecución.
- * Se usa tanto para GET /:id como para la generación de reportes (RF-27),
- * así que vive separado del handler HTTP.
- */
 async function construirDetalleEjecucion(ejecucionId) {
   const ejecucion = await prisma.ejecucion.findUnique({
     where: { id: ejecucionId },
@@ -198,9 +193,6 @@ async function obtenerDetalleEjecucion(req, res) {
   }
 }
 
-/**
- * GET /api/ejecuciones/:id/reporte?formato=pdf|excel
- */
 async function exportarReporteEjecucion(req, res) {
   const ejecucionId = parseInt(req.params.id, 10);
   const formato = (req.query.formato || 'pdf').toLowerCase();

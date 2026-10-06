@@ -14,9 +14,6 @@ const ESTATUS_ENVIO_TAG = {
   requiere_revision_manual: { color: 'warning', texto: 'Revisión manual' },
 };
 
-// readOnly=true (uso en Historial): solo muestra estado.
-// readOnly=false: agrega columna de acción para reintentar (uso futuro en
-// una ejecución en curso, ej. dentro de PanelMonitoreo).
 function TablaEstadoMunicipios({ municipios, readOnly = true, reintentando = {}, onReintentar }) {
   const columnas = [
     {

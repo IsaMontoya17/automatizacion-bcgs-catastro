@@ -13,10 +13,6 @@ function formatoFecha(fecha) {
   return fecha ? new Date(fecha).toLocaleString('es-CO') : '—';
 }
 
-/**
- * Genera el reporte en Excel: hoja "Resumen" con los conteos generales y
- * hoja "Municipios" con el detalle municipio por municipio.
- */
 async function generarReporteExcel(detalle) {
   const libro = new ExcelJS.Workbook();
   libro.creator = 'Gerencia de Catastro - Gobernación de Antioquia';
@@ -74,10 +70,6 @@ async function generarReporteExcel(detalle) {
   return libro.xlsx.writeBuffer();
 }
 
-/**
- * Genera el reporte en PDF: encabezado + resumen + tabla dibujada a mano
- * (pdfkit no trae tablas nativas) con salto de página automático.
- */
 function generarReportePdf(detalle) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: 'A4', margin: 40 });
@@ -133,7 +125,7 @@ function generarReportePdf(detalle) {
 
     dibujarEncabezadoTabla();
 
-    const ALTO_MINIMO_FILA = 12; // evita filas colapsadas cuando todas las columnas vienen vacías
+    const ALTO_MINIMO_FILA = 12; 
     const ESPACIO_ENTRE_FILAS = 4;
 
     detalle.municipios.forEach((m) => {
@@ -151,9 +143,6 @@ function generarReportePdf(detalle) {
 
       doc.fontSize(8);
 
-      // Altura real que ocupará cada columna (Observación suele ser la más
-      // alta al envolver a varias líneas). Se calcula ANTES de dibujar para
-      // no depender de dónde haya quedado el cursor tras el último texto.
       const alturaFila = Math.max(
         ALTO_MINIMO_FILA,
         ...valores.map((valor, i) => doc.heightOfString(valor, { width: columnas[i].ancho }))
@@ -171,9 +160,6 @@ function generarReportePdf(detalle) {
         x += columnas[i].ancho;
       });
 
-      // Se fija el cursor manualmente en vez de dejar que doc.text() lo
-      // decida — así ninguna fila puede empezar antes de que termine la
-      // columna más alta de la fila anterior.
       doc.y = y + alturaFila + ESPACIO_ENTRE_FILAS;
     });
 

@@ -3,11 +3,6 @@ const prisma = require('../config/prisma');
 const TIPOS_VALIDOS = ['para', 'cc', 'cco'];
 const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/**
- * GET /api/admin/municipios
- * Devuelve los 113 municipios con sus correos agrupados por tipo,
- * para poblar la tabla del Panel de Administración.
- */
 async function listarMunicipios(req, res) {
   try {
     const municipios = await prisma.municipio.findMany({
@@ -35,15 +30,6 @@ async function listarMunicipios(req, res) {
   }
 }
 
-/**
- * PUT /api/admin/municipios/:id/correos
- * body: { correos: { para: ["a@x.com"], cc: [...], cco: [...] } }
- *
- * Estrategia full-replace dentro de una transacción: se borran todos los
- * correos actuales del municipio y se insertan los nuevos. Esto evita tener
- * que calcular diffs (qué se agregó, qué se quitó, qué cambió de tipo) y deja
- * el estado final siempre consistente con lo que envió el formulario.
- */
 async function actualizarCorreosMunicipio(req, res) {
   const municipioId = parseInt(req.params.id, 10);
   if (!municipioId) {

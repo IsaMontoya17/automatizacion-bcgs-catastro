@@ -35,7 +35,6 @@ function PanelEjecucion({ onEjecucionIniciada }) {
   return (
     <div style={{ minHeight: 'calc(100vh - 64px)', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <Card style={{ width: 420 }}>
-        {/* Encabezado centrado */}
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <Icon icon="famicons:calendar" style={{ fontSize: 32, marginBottom: 8, display: 'inline-block' }} />
           <Title level={4} style={{ marginBottom: 4 }}>
@@ -46,7 +45,6 @@ function PanelEjecucion({ onEjecucionIniciada }) {
 
         {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
 
-        {/* Distribución simétrica y centrada de los selectores */}
         <Row gutter={16}>
           <Col span={12}>
             <Text strong>Mes</Text>

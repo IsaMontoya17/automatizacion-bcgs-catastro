@@ -103,7 +103,6 @@ function App() {
 
   const esAdministrador = usuario.rol === 'administrador';
 
-  // Guarda de seguridad para vistas restringidas
   const vistaSegura = (!esAdministrador && (vista === 'correos' || vista === 'usuarios'))
     ? 'principal'
     : vista;

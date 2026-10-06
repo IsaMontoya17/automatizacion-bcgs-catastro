@@ -1,10 +1,5 @@
 const prisma = require('../config/prisma');
 
-/**
- * GET /api/admin/plantilla
- * Devuelve la plantilla activa (fila única) para poblar el formulario
- * de edición en el Panel de Administración.
- */
 async function obtenerPlantilla(req, res) {
   try {
     const plantilla = await prisma.plantillaCorreo.findFirst({ orderBy: { id: 'asc' } });
@@ -20,12 +15,6 @@ async function obtenerPlantilla(req, res) {
   }
 }
 
-/**
- * PUT /api/admin/plantilla
- * body: { asunto: "...", cuerpo: "..." }
- * Actualiza la plantilla activa (o la crea si por algún motivo no existe
- * ninguna todavía) — se trata siempre como configuración de fila única.
- */
 async function actualizarPlantilla(req, res) {
   const { asunto, cuerpo } = req.body || {};
 

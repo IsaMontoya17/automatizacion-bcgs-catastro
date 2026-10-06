@@ -19,10 +19,6 @@ const {
   finalizarDescarga,
 } = require('./resolucionesBot');
 
-// BCGS entrega el nombre del municipio en el <option> con el formato
-// "(código) NOMBRE" (ej. "(002) ABEJORRAL"). El código ya se guarda por
-// separado en codigoBcgs, así que se limpia el prefijo antes de usarlo en
-// cualquier lado (BD, eventos de progreso, reporte) para no duplicarlo.
 const REGEX_PREFIJO_CODIGO = /^\(\d+\)\s*/;
 
 function limpiarNombreMunicipio(nombre) {
@@ -37,15 +33,11 @@ async function ejecutarDescargaResoluciones(mes, anio, { onProgreso, headless = 
 
   let ejecucion;
   if (ejecucionId) {
-    // Se llama desde la API: la fila Ejecucion ya fue creada por server.js
-    // con el usuario real (del JWT), así que solo la recuperamos.
     ejecucion = await prisma.ejecucion.findUnique({ where: { id: ejecucionId } });
     if (!ejecucion) {
       throw new Error(`No existe la ejecución con id ${ejecucionId} en la base de datos.`);
     }
   } else {
-    // Modo standalone (CLI, sin pasar por la API): se crea aquí mismo,
-    // atribuida al usuario admin, para permitir correr este script suelto.
     const admin = await obtenerUsuarioAdmin(prisma);
     ejecucion = await prisma.ejecucion.create({
       data: { mes, anio, usuarioId: admin.id, estatus: 'en_progreso' },

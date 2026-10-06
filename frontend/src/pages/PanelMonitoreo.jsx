@@ -65,13 +65,6 @@ function PanelMonitoreo({ ejecucionId, mes, anio, onNuevaEjecucion, onEjecucionI
         finRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [eventos]);
 
-    // Tres situaciones posibles:
-    // - 'ninguna': hay eventos en vivo (Socket.io) — flujo normal, sin reconstrucción.
-    // - 'completa': no hay eventos en vivo (se perdieron al reiniciar el servidor)
-    //   pero la ejecución sí llegó a 'completado' — el reporte final es confiable.
-    // - 'interrumpida': no hay eventos en vivo Y la ejecución quedó en 'error'
-    //   porque el servidor se reinició a mitad de camino — el reporte solo
-    //   refleja lo que alcanzó a procesarse, no el total real (113 municipios).
     const estadoReconstruccion = useMemo(() => {
         if (eventos.length > 0 || !reporte) return 'ninguna';
         return reporte.parcial ? 'interrumpida' : 'completa';
@@ -230,7 +223,6 @@ function PanelMonitoreo({ ejecucionId, mes, anio, onNuevaEjecucion, onEjecucionI
                 )}
 
                 <Row gutter={16}>
-                    {/* --- FASE 1: DESCARGA --- */}
                     <Col xs={24} lg={12} style={{ marginBottom: 16 }}>
                         <Card style={{ height: '100%' }}>
                             <Title level={5} style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -341,7 +333,6 @@ function PanelMonitoreo({ ejecucionId, mes, anio, onNuevaEjecucion, onEjecucionI
                         </Card>
                     </Col>
 
-                    {/* --- FASE 2: ENVÍO --- */}
                     <Col xs={24} lg={12} style={{ marginBottom: 16 }}>
                         <Card style={{ height: '100%', opacity: (interrumpida ? true : envioIniciado) ? 1 : 0.5 }}>
                             <Title level={5} style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -472,8 +463,6 @@ function PanelMonitoreo({ ejecucionId, mes, anio, onNuevaEjecucion, onEjecucionI
 
                 <div ref={finRef} />
 
-                {/* Nota: los botones de reintento no aplican en modo interrumpida porque
-                    el backend exige estatus 'completado' para reintentar envíos (409 si no) */}
                 {reporte && !interrumpida && (
                     <Card style={{ marginTop: 4 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>

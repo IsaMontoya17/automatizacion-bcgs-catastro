@@ -17,10 +17,6 @@ function obtenerSaludo() {
   return hora < 12 ? 'Buenos días' : 'Buenas tardes';
 }
 
-// La plantilla del asunto y el cuerpo del correo (RF-25) vive en la tabla
-// plantilla_correo y se administra desde el Panel de Administración. Se
-// trata como configuración global de fila única: siempre se usa la primera
-// que exista.
 async function obtenerPlantillaActiva() {
   const plantilla = await prisma.plantillaCorreo.findFirst({ orderBy: { id: 'asc' } });
 
@@ -106,8 +102,6 @@ async function obtenerEjecucion(mes, anio, ejecucionId) {
     return ejecucion;
   }
 
-  // Modo standalone (CLI): se busca la ejecución de descarga más reciente
-  // para ese mes/año, asumiendo que no hay dos ejecuciones simultáneas.
   const ejecucion = await prisma.ejecucion.findFirst({
     where: { mes, anio },
     orderBy: { id: 'desc' },

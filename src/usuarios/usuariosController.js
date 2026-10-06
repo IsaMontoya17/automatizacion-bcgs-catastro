@@ -49,12 +49,6 @@ async function crearUsuario(req, res) {
   }
 }
 
-/**
- * PUT /api/admin/usuarios/:id
- * body: { nombre?, usuario?, rol?, password? }
- * El administrador puede editar TODO, incluyendo el nombre de usuario
- * (login) — se valida unicidad excluyendo al propio registro.
- */
 async function actualizarUsuario(req, res) {
   const id = parseInt(req.params.id, 10);
   if (!id) return res.status(400).json({ error: 'Id de usuario inválido.' });

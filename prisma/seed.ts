@@ -3,10 +3,6 @@ import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
-// Los 113 municipios atendidos por la Gerencia de Catastro, con su código
-// BCGS. Fuente de verdad única: si BCGS cambia un código o se agrega un
-// municipio, se actualiza aquí y el upsert de abajo lo refleja en la BD sin
-// duplicar filas (usa codigoBcgs como llave de coincidencia).
 const MUNICIPIOS: { codigo: string; nombre: string }[] = [
   { codigo: '129', nombre: 'CALDAS' },
   { codigo: '360', nombre: 'ITAGUÍ' },
@@ -123,8 +119,6 @@ const MUNICIPIOS: { codigo: string; nombre: string }[] = [
   { codigo: '895', nombre: 'ZARAGOZA' },
 ];
 
-// Plantilla por defecto del correo (RF-25). Si en el futuro se decide
-// cambiar el texto por defecto para nuevos entornos, se edita solo aquí.
 const PLANTILLA_POR_DEFECTO = {
   asunto: 'Entrega de los movimientos generados en el mes de {mes} de {anio} en el municipio de {municipio}',
   cuerpo:

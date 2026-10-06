@@ -8,11 +8,6 @@ async function obtenerCorreosNotificacion() {
   return filas.map((f) => f.email);
 }
 
-/**
- * RF-20: se envía siempre al terminar de procesar los 113 municipios y
- * agotar los reintentos automáticos, sin importar si algunos quedaron en
- * revisión manual — el resumen adjunto refleja el estado final real.
- */
 async function enviarNotificacionFinalizacion(transportador, { ejecucion, reporteEnvio, config, avisar }) {
   const destinatarios = await obtenerCorreosNotificacion();
 
@@ -52,8 +47,6 @@ async function enviarNotificacionFinalizacion(transportador, { ejecucion, report
     avisar({ tipo: 'notificacion_enviada', destinatarios: destinatarios.length });
     return { enviado: true };
   } catch (err) {
-    // Un fallo aquí no debe tumbar el proceso completo: el envío a los
-    // municipios ya terminó exitosamente, esto es solo un aviso adicional.
     avisar({ tipo: 'notificacion_error', error: err.message });
     return { enviado: false, error: err.message };
   }

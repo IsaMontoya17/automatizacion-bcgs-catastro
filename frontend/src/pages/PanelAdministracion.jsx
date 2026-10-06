@@ -108,7 +108,7 @@ function TabCorreosMunicipio() {
             message.success(`Correos de ${municipioEditando.nombre} actualizados.`);
             cerrarEdicion();
         } catch (err) {
-            if (err?.errorFields) return; // error de validación del form, ya se muestra inline
+            if (err?.errorFields) return; 
             message.error(err.message || 'No se pudo guardar los cambios.');
         } finally {
             setGuardando(false);
@@ -298,9 +298,6 @@ function TabPlantillaCorreo() {
     );
 }
 
-// RF-19: correos que reciben la notificación de "proceso finalizado
-// correctamente" (con el reporte adjunto) cada vez que termina una
-// ejecución completa de descarga y envío.
 function TabNotificaciones() {
     const [correos, setCorreos] = useState([]);
     const [cargando, setCargando] = useState(true);
