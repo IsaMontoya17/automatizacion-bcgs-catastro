@@ -1,7 +1,6 @@
 const bcrypt = require('bcrypt');
 const prisma = require('../config/prisma');
 
-// Ajusta 'usuario' si el valor real guardado en tu BD es distinto (ej. 'operador')
 const ROLES_VALIDOS = ['administrador', 'usuario'];
 const RONDAS_HASH = 10;
 
