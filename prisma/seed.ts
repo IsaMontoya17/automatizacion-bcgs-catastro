@@ -131,21 +131,34 @@ const PLANTILLA_POR_DEFECTO = {
     'Gerencia de Catastro - Gobernación de Antioquia',
 };
 
-async function sembrarUsuarioAdmin() {
-  const claveHasheada = await bcrypt.hash('AdminCatastro2026*', 10);
-
+async function sembrarUsuarios() {
+  // 1. Usuario Administrador
+  const claveAdmin = await bcrypt.hash('AdminCatastro2026*', 10);
   const admin = await prisma.usuario.upsert({
     where: { usuario: 'admin' },
     update: {},
     create: {
       nombre: 'Isabela Montoya Alarcón',
       usuario: 'admin',
-      passwordHash: claveHasheada,
+      passwordHash: claveAdmin,
       rol: 'administrador',
     },
   });
-
   console.log(`✓ Usuario verificado/creado: ${admin.usuario}`);
+
+  // 2. Usuario Estándar (Rol Usuario)
+  const claveUser = await bcrypt.hash('UsuarioCatastro2026*', 10);
+  const operador = await prisma.usuario.upsert({
+    where: { usuario: 'Prueba001' },
+    update: {},
+    create: {
+      nombre: 'Prueba Uno',
+      usuario: 'Prueba001',
+      passwordHash: claveUser,
+      rol: 'usuario',
+    },
+  });
+  console.log(`✓ Usuario verificado/creado: ${operador.usuario}`);
 }
 
 async function sembrarMunicipios() {
@@ -173,7 +186,7 @@ async function sembrarPlantillaCorreo() {
 }
 
 async function main() {
-  await sembrarUsuarioAdmin();
+  await sembrarUsuarios();
   await sembrarMunicipios();
   await sembrarPlantillaCorreo();
 }

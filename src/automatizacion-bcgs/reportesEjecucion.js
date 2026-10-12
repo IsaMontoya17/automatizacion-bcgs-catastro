@@ -13,6 +13,30 @@ function formatoFecha(fecha) {
   return fecha ? new Date(fecha).toLocaleString('es-CO') : '—';
 }
 
+function formatearObservacion(errorTexto) {
+  if (!errorTexto) return '—';
+
+  const err = String(errorTexto).toLowerCase();
+
+  if (err.includes('552') || err.includes('size limit') || err.includes('maxsizeerror') || err.includes('exceeded')) {
+    return 'El archivo adjunto supera el límite de tamaño permitido por el servidor de correo (25 MB). Requiere revisión manual o envío por canal alternativo.';
+  }
+
+  if (err.includes('sin destinatarios') || err.includes('no recipients')) {
+    return 'Sin destinatarios configurados para este municipio.';
+  }
+
+  if (err.includes('550') || err.includes('not found') || err.includes('mailbox unavailable')) {
+    return 'Buzón de correo no encontrado o rechazado por el servidor de destino.';
+  }
+
+  if (err.includes('etimedout') || err.includes('econnrefused') || err.includes('timeout')) {
+    return 'Tiempo de espera agotado al conectar con el servidor SMTP.';
+  }
+
+  return errorTexto.length > 120 ? `${errorTexto.substring(0, 117)}...` : errorTexto;
+}
+
 async function generarReporteExcel(detalle) {
   const libro = new ExcelJS.Workbook();
   libro.creator = 'Gerencia de Catastro - Gobernación de Antioquia';
@@ -50,7 +74,7 @@ async function generarReporteExcel(detalle) {
     { header: 'Error descarga', key: 'errorDescarga', width: 30 },
     { header: 'Estado envío', key: 'estadoEnvio', width: 18 },
     { header: 'Intentos', key: 'intentos', width: 10 },
-    { header: 'Error envío', key: 'errorEnvio', width: 30 },
+    { header: 'Observación envío', key: 'errorEnvio', width: 45 },
   ];
   hojaMunicipios.getRow(1).font = { bold: true };
 
@@ -63,7 +87,7 @@ async function generarReporteExcel(detalle) {
       errorDescarga: m.descarga?.error || '',
       estadoEnvio: m.envio ? (ETIQUETAS_ENVIO[m.envio.estatus] || m.envio.estatus) : '—',
       intentos: m.envio?.intentosRegistrados ?? '',
-      errorEnvio: m.envio?.tipoError || '',
+      errorEnvio: formatearObservacion(m.envio?.tipoError),
     });
   });
 
@@ -102,11 +126,11 @@ function generarReportePdf(detalle) {
     doc.moveDown(0.5);
 
     const columnas = [
-      { titulo: 'Municipio', ancho: 140 },
-      { titulo: 'Descarga', ancho: 90 },
-      { titulo: 'Envío', ancho: 90 },
-      { titulo: 'Intentos', ancho: 50 },
-      { titulo: 'Observación', ancho: 145 },
+      { titulo: 'Municipio', ancho: 120 },
+      { titulo: 'Descarga', ancho: 85 },
+      { titulo: 'Envío', ancho: 85 },
+      { titulo: 'Intentos', ancho: 45 },
+      { titulo: 'Observación', ancho: 180 },
     ];
 
     function dibujarEncabezadoTabla() {
@@ -120,18 +144,19 @@ function generarReportePdf(detalle) {
       doc.font('Helvetica');
       doc.y = y + 14;
       doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).stroke();
-      doc.y += 4;
+      doc.y += 6;
     }
 
     dibujarEncabezadoTabla();
 
-    const ALTO_MINIMO_FILA = 12; 
-    const ESPACIO_ENTRE_FILAS = 4;
+    const ALTO_MINIMO_FILA = 12;
+    const ESPACIO_ENTRE_FILAS = 6;
 
     detalle.municipios.forEach((m) => {
       const estadoDescarga = m.descarga ? (ETIQUETAS_DESCARGA[m.descarga.estatus] || m.descarga.estatus) : '—';
       const estadoEnvio = m.envio ? (ETIQUETAS_ENVIO[m.envio.estatus] || m.envio.estatus) : '—';
-      const observacion = m.envio?.tipoError || m.descarga?.error || '';
+      
+      const observacion = formatearObservacion(m.envio?.tipoError || m.descarga?.error);
 
       const valores = [
         m.nombre || '',
@@ -141,22 +166,23 @@ function generarReportePdf(detalle) {
         observacion,
       ];
 
-      doc.fontSize(8);
+      doc.fontSize(8).font('Helvetica');
 
       const alturaFila = Math.max(
         ALTO_MINIMO_FILA,
-        ...valores.map((valor, i) => doc.heightOfString(valor, { width: columnas[i].ancho }))
+        ...valores.map((valor, i) => doc.heightOfString(valor, { width: columnas[i].ancho, lineGap: 1 }))
       );
 
-      if (doc.y + alturaFila > doc.page.height - doc.page.margins.bottom) {
+      if (doc.y + alturaFila + ESPACIO_ENTRE_FILAS > doc.page.height - doc.page.margins.bottom) {
         doc.addPage();
         dibujarEncabezadoTabla();
       }
 
       const y = doc.y;
       let x = doc.page.margins.left;
+
       valores.forEach((valor, i) => {
-        doc.text(valor, x, y, { width: columnas[i].ancho });
+        doc.text(valor, x, y, { width: columnas[i].ancho, lineGap: 1 });
         x += columnas[i].ancho;
       });
 
