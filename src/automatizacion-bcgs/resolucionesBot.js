@@ -15,7 +15,7 @@ async function seleccionarRadioRangoFechas(page) {
 async function seleccionarFechaEnCalendario(page, campoId, dia, mes, anio) {
   const mesIndexado = mes - 1;
 
-  await page.waitForSelector(`#${campoId}`, { visible: true, timeout: 15000 });
+  await page.waitForSelector(`#${campoId}`, { visible: true, timeout: 60000 });
   await page.click(`#${campoId}`);
   await new Promise((r) => setTimeout(r, 500));
 
@@ -77,7 +77,7 @@ async function establecerRangoFechasMes(page, mes, anio) {
 }
 
 async function obtenerListaMunicipios(page) {
-  await page.waitForSelector('#codigoMunicipio', { timeout: 15000 });
+  await page.waitForSelector('#codigoMunicipio', { timeout: 60000 });
   return page.evaluate(() => {
     const select = document.getElementById('codigoMunicipio');
     return Array.from(select.options)

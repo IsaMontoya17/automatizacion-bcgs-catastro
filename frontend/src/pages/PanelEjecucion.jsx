@@ -11,7 +11,7 @@ const MESES = [
 ];
 
 const ANIO_ACTUAL = new Date().getFullYear();
-const ANIOS = [ANIO_ACTUAL - 1, ANIO_ACTUAL, ANIO_ACTUAL + 1];
+const ANIOS = [2024, 2025, 2026, 2027, 2028, 2029, 2030];
 
 function PanelEjecucion({ onEjecucionIniciada }) {
   const [mes, setMes] = useState(new Date().getMonth() + 1);

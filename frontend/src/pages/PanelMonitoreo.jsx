@@ -373,7 +373,7 @@ function PanelMonitoreo({ ejecucionId, mes, anio, onNuevaEjecucion, onEjecucionI
                                 )
                             ) : !envioIniciado ? (
                                 <Text type="secondary">Se activará cuando finalice la descarga.</Text>
-                            ) : totalAEnviar ? (
+                            ) : totalAEnviar > 0 ? (
                                 <>
                                     <Progress
                                         percent={envioPorcentaje}
@@ -402,6 +402,14 @@ function PanelMonitoreo({ ejecucionId, mes, anio, onNuevaEjecucion, onEjecucionI
                                         </Col>
                                     </Row>
                                 </>
+                            ) : estatus === 'completado' ? (
+                                <Alert 
+                                    type="info" 
+                                    showIcon 
+                                    message="Sin envíos programados" 
+                                    description="No se detectaron resoluciones para enviar en este periodo." 
+                                    style={{ marginTop: 16 }} 
+                                />
                             ) : (
                                 <Text type="secondary">Preparando el envío de correos...</Text>
                             )}

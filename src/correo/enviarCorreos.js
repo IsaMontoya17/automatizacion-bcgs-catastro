@@ -17,6 +17,24 @@ function obtenerSaludo() {
   return hora < 12 ? 'Buenos días' : 'Buenas tardes';
 }
 
+function traducirErrorEnvio(error) {
+  const texto = String(error || '');
+
+  if (texto.includes('EHOSTUNREACH') || texto.includes('ENETUNREACH') || texto.includes('ENOTFOUND')) {
+    return 'Fallo de conexión a internet o el servidor de correo es inalcanzable. Verifica tu conexión de red.';
+  }
+
+  if (texto.includes('ECONNRESET') || texto.includes('ECONNABORTED')) {
+    return 'El servidor de correo cortó la conexión durante el envío (posible adjunto demasiado grande o falla temporal de red).';
+  }
+
+  if (texto.includes('552') && texto.toLowerCase().includes('exceed')) {
+    return 'El adjunto excede el límite de tamaño permitido por el servidor de correo.';
+  }
+
+  return texto;
+}
+
 async function obtenerPlantillaActiva() {
   const plantilla = await prisma.plantillaCorreo.findFirst({ orderBy: { id: 'asc' } });
 
@@ -80,17 +98,19 @@ async function procesarEnvioMunicipio({ item, mes, anio, rutaCarpetaMes, plantil
     return { exito: true, intentos: resultado.intentos };
   }
 
+  const errorTraducido = traducirErrorEnvio(resultado.error);
+
   await prisma.resultadoEnvio.create({
     data: {
       ejecucionId: ejecucion.id,
       municipioId: municipioDb.id,
       estatus: 'requiere_revision_manual',
-      tipoError: resultado.error,
+      tipoError: errorTraducido,
       intentos: resultado.intentos,
     },
   });
-  avisar({ tipo: 'envio_revision_manual', municipio: item.municipio, codigo: item.codigo, error: resultado.error });
-  return { exito: false, error: resultado.error, intentos: resultado.intentos };
+  avisar({ tipo: 'envio_revision_manual', municipio: item.municipio, codigo: item.codigo, error: errorTraducido });
+  return { exito: false, error: errorTraducido, intentos: resultado.intentos };
 }
 
 async function obtenerEjecucion(mes, anio, ejecucionId) {

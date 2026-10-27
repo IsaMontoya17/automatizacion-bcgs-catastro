@@ -9,6 +9,8 @@ async function iniciarNavegador({ headless = false } = {}) {
     defaultViewport: null,
   });
   const page = await browser.newPage();
+  page.setDefaultTimeout(60000);
+  page.setDefaultNavigationTimeout(60000);
   return { browser, page };
 }
 
