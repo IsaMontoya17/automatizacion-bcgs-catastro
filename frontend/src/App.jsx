@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Layout, Button, Space, Typography, Avatar } from 'antd';
+import { Layout, Button, Space, Typography, Avatar, notification } from 'antd';
 import { Icon } from '@iconify/react';
 import Login from './pages/Login';
 import PanelEjecucion from './pages/PanelEjecucion';
@@ -11,6 +11,19 @@ import { tokenValido } from './utils/token';
 
 const { Header, Content } = Layout;
 const { Text } = Typography;
+
+const AVISO_SEGUNDOS = 10;
+const KEY_AVISO = 'aviso-expiracion-sesion';
+
+function obtenerExpMs(token) {
+  try {
+    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const { exp } = JSON.parse(atob(payload));
+    return exp ? exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
 
 function App() {
   const [usuario, setUsuario] = useState(() => {
@@ -56,13 +69,56 @@ function App() {
       if (!tokenValido(token)) {
         cerrarSesion();
       }
-    }, 60000); 
+    }, 60000);
 
     return () => {
       window.removeEventListener('sesion-expirada', manejarSesionExpirada);
       clearInterval(intervalo);
     };
   }, []);
+
+  useEffect(() => {
+    if (!usuario) return;
+
+    const token = localStorage.getItem('token');
+    const expMs = obtenerExpMs(token);
+    if (!expMs || expMs <= Date.now()) return;
+
+    let intervaloAviso = null;
+
+    const pintarAviso = () => {
+      const restante = Math.max(0, Math.ceil((expMs - Date.now()) / 1000));
+      notification.warning({
+        key: KEY_AVISO, // misma key = actualiza el mismo aviso, no apila uno nuevo
+        message: 'Tu sesión está por expirar',
+        description: `Se cerrará automáticamente en ${restante} segundo${restante === 1 ? '' : 's'}.`,
+        duration: 0,
+        placement: 'topRight',
+      });
+      if (restante <= 0) clearInterval(intervaloAviso);
+    };
+
+    const iniciarAviso = () => {
+      pintarAviso();
+      intervaloAviso = setInterval(pintarAviso, 1000);
+    };
+
+    const timeoutAviso = setTimeout(
+      iniciarAviso,
+      Math.max(0, expMs - AVISO_SEGUNDOS * 1000 - Date.now())
+    );
+    const timeoutExpirar = setTimeout(
+      () => cerrarSesion(),
+      Math.max(0, expMs - Date.now())
+    );
+
+    return () => {
+      clearTimeout(timeoutAviso);
+      clearTimeout(timeoutExpirar);
+      clearInterval(intervaloAviso);
+      notification.destroy(KEY_AVISO);
+    };
+  }, [usuario]);
 
   function navegarA(nuevaVista) {
     if (nuevaVista === vista) return;
