@@ -9,7 +9,17 @@ async function irAModuloDescargaResoluciones(page) {
 }
 
 async function seleccionarRadioRangoFechas(page) {
-  await clicRobusto(page, '#radio1in');
+  for (let intento = 1; intento <= 5; intento++) {
+    await new Promise((r) => setTimeout(r, 1000));
+    await clicRobusto(page, '#radio1in');
+
+    try {
+      await page.waitForSelector('#fechainicial', { visible: true, timeout: 5000 });
+      return;
+    } catch (err) {}
+  }
+
+  throw new Error('El clic en el radio no mostró los campos de fecha después de varios intentos.');
 }
 
 async function seleccionarFechaEnCalendario(page, campoId, dia, mes, anio) {
