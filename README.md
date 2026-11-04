@@ -30,7 +30,7 @@ Esta aplicación reemplaza ese flujo manual por un proceso automático, auditabl
 
 ## Características
 
-- **Acceso restringido**: inicio de sesión con usuario y contraseña, roles y expiración automática de sesión por inactividad.
+- **Acceso restringido**: inicio de sesión con usuario y contraseña, roles y expiración automática de sesión.
 - **Descarga automática desde BCGS**: autenticación, navegación y recorrido de los 113 municipios para el mes y año seleccionados.
 - **Organización de archivos** por mes y año.
 - **Envío masivo de correos** con la resolución adjunta, plantilla configurable (asunto y mensaje con mes, año y municipio como valores dinámicos) y destinatarios Para/CC/CCO por municipio.
@@ -59,7 +59,8 @@ El código está organizado de forma modular por dominio (automatización BCGS, 
 ```text
 .
 ├── frontend/               # Aplicación React (Vite)
-│   └── src/
+│   ├── src/
+│   └── .env.example        # Plantilla de variables del frontend
 ├── prisma/                 # Esquema de base de datos, migraciones y seed
 ├── src/
 │   ├── auth/               # Autenticación y control de acceso por rol
@@ -70,7 +71,7 @@ El código está organizado de forma modular por dominio (automatización BCGS, 
 │   ├── scripts/            # Scripts de utilidad
 │   └── utils/
 ├── server.js               # Punto de entrada del servidor
-├── .env.example            # Plantilla de variables de entorno
+├── .env.example            # Plantilla de variables del backend
 └── package.json
 ```
 
@@ -79,7 +80,7 @@ El código está organizado de forma modular por dominio (automatización BCGS, 
 ## Requisitos previos
 
 - [Node.js](https://nodejs.org/) (versión LTS recomendada)
-- [MySQL](https://www.mysql.com/) en ejecución
+- [MySQL](https://www.mysql.com/) en ejecución. El usuario de MySQL debe usar el plugin de autenticación `caching_sha2_password` o `mysql_native_password`; `sha256_password` no es compatible con Prisma.
 - Credenciales institucionales de acceso a BCGS
 - Una cuenta de correo con envío SMTP habilitado (ver [Configuración](#configuración))
 
@@ -87,8 +88,8 @@ El código está organizado de forma modular por dominio (automatización BCGS, 
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/IsaMontoya17/<nombre-del-repo>.git
-cd <nombre-del-repo>
+git clone https://github.com/IsaMontoya17/automatizacion-bcgs-catastro.git
+cd automatizacion-bcgs-catastro
 
 # 2. Instalar dependencias del backend
 npm install
@@ -101,30 +102,77 @@ cd ..
 
 ## Configuración
 
-1. Copia la plantilla de variables de entorno:
+El proyecto necesita **dos archivos `.env`**: uno para el backend (en la raíz) y otro para el frontend (dentro de `frontend/`). Ambos vienen como plantilla con el sufijo `.example`, y **antes de correr el programa hay que quitarle el `.example` al nombre** para que el sistema los reconozca.
+
+> Esta configuración la realiza una sola vez la persona que instala el sistema. Los usuarios finales no interactúan con estos archivos.
+
+### 1. Variables del backend (`.env` en la raíz)
+
+1. Renombra el archivo `.env.example` a `.env` (quítale el `.example`). También puedes copiarlo:
 
    ```bash
    cp .env.example .env
    ```
 
-2. Completa los valores en `.env`. Las variables principales son:
+2. Abre el `.env` y completa los valores. Las variables principales son:
 
    | Variable | Descripción |
    | --- | --- |
-   | `DATABASE_URL` | Cadena de conexión a MySQL |
+   | `DATABASE_URL` | Cadena de conexión a MySQL. **Cambia el usuario y la clave por los de tu propio MySQL** |
+   | `JWT_SECRET` | Cadena larga y aleatoria, propia de cada instalación (ver abajo) |
    | `EMAIL_SERVICIO` | Proveedor de correo para Nodemailer (por defecto `gmail`) |
    | `EMAIL_USUARIO` | Cuenta remitente |
    | `EMAIL_CLAVE` | Contraseña o clave de aplicación del remitente |
 
-   Consulta `.env.example` para ver la lista completa (credenciales de BCGS, secreto JWT, etc.).
+   Consulta `.env.example` para ver la lista completa (credenciales de BCGS, duración de la sesión, etc.).
 
-3. Crea la base de datos y aplica las migraciones:
+3. **Cambia el usuario y la clave en `DATABASE_URL`** por los de tu MySQL. El formato es:
+
+   ```dotenv
+   DATABASE_URL="mysql://TU_USUARIO:TU_CLAVE@localhost:3306/catastro_resoluciones"
+   ```
+
+   Por ejemplo, si tu usuario es `root` y tu clave es `1234`, quedaría `mysql://root:1234@localhost:3306/catastro_resoluciones`. El valor de la plantilla (`usuario:clave`) es solo un ejemplo y no funcionará tal cual.
+
+4. Genera tu propio `JWT_SECRET` con este comando y pega el resultado como valor:
+
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+   ```
+
+### 2. Variables del frontend (`frontend/.env`)
+
+1. Dentro de la carpeta `frontend/`, renombra `.env.example` a `.env` (quítale el `.example`):
+
+   ```bash
+   cd frontend
+   cp .env.example .env
+   cd ..
+   ```
+
+2. El archivo contiene la dirección del backend:
+
+   ```dotenv
+   VITE_API_URL=http://localhost:3000
+   ```
+
+   Si el backend corre en otro puerto o servidor, ajusta este valor. Sin este archivo, el frontend no sabe a dónde enviar las peticiones y el inicio de sesión falla.
+
+### 3. Base de datos
+
+1. Crea la base de datos vacía en MySQL, con el mismo nombre que pusiste en `DATABASE_URL`:
+
+   ```sql
+   CREATE DATABASE catastro_resoluciones;
+   ```
+
+2. Aplica las migraciones:
 
    ```bash
    npx prisma migrate deploy
    ```
 
-4. Carga los datos iniciales (usuario administrador, los 113 municipios con su código BCGS y la plantilla de correo por defecto):
+3. Carga los datos iniciales (usuario administrador, los 113 municipios con su código BCGS y la plantilla de correo por defecto):
 
    ```bash
    npx prisma db seed
@@ -132,18 +180,20 @@ cd ..
 
 > **Nota sobre el correo:** las cuentas personales de Gmail solo sirven para pruebas puntuales. Para el envío real a los 113 municipios se requiere una cuenta institucional con SMTP/Microsoft Graph habilitado.
 
-> **Nota sobre dependencias:** Prisma está fijado en la versión `5.22.0` y Puppeteer no debe actualizarse sin probar antes el flujo de BCGS, ya que es sensible a la versión.
+> **Nota sobre dependencias:** Prisma está fijado en la versión `5.22.0` y Puppeteer no debe actualizarse sin probar antes el flujo de BCGS, ya que es sensible a la versión. Por la misma razón, no se recomienda ejecutar `npm audit fix --force`.
 
 ## Ejecución
 
 ```bash
-# Backend
+# Backend (en la raíz del proyecto)
 npm start
 
 # Frontend (en otra terminal)
 cd frontend
 npm run dev
 ```
+
+El frontend queda disponible en `http://localhost:5173` y el backend en `http://localhost:3000`. Si cambias algún archivo `.env`, reinicia el proceso correspondiente: ni el backend ni Vite recargan las variables en caliente.
 
 Revisa la sección `scripts` de `package.json` para ver los comandos disponibles.
 
