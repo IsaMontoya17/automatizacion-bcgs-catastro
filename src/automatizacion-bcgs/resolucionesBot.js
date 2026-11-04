@@ -134,7 +134,18 @@ async function esperarDescargaOAlerta(page, carpeta, archivosPrevios, timeoutMs 
   throw new Error(`Tiempo de espera agotado (${timeoutMs / 1000}s) sin completar la descarga ni detectar alerta.`);
 }
 
-async function descargarResolucionMunicipio(page, municipio, carpetaDestino) {
+async function descargarResolucionMunicipio(page, municipio, carpetaDestino, mes, anio) {
+  // Validación y autorrecuperación si la pantalla se descolgó o cerró el modal
+  const campoVisible = await page.$('#codigoMunicipio').catch(() => null);
+  if (!campoVisible) {
+    await irAModuloDescargaResoluciones(page);
+    await seleccionarRadioRangoFechas(page);
+    if (mes && anio) {
+      await establecerRangoFechasMes(page, mes, anio);
+    }
+    await page.waitForSelector('#codigoMunicipio', { visible: true, timeout: 30000 });
+  }
+
   const archivosIniciales = fs.readdirSync(carpetaDestino);
   if (archivosIniciales.some((f) => f.endsWith('.crdownload'))) {
     throw new Error('Existe una descarga previa sin finalizar en la carpeta de destino.');
@@ -143,14 +154,13 @@ async function descargarResolucionMunicipio(page, municipio, carpetaDestino) {
   await page.select('#codigoMunicipio', municipio.value);
   await clicRobusto(page, "//button[contains(., 'Descargar')]", { porXpath: true });
 
-  const resultado = await esperarDescargaOAlerta(page, carpetaDestino, archivosIniciales, 120000);
+  const resultado = await esperarDescargaOAlerta(page, carpetaDestino, archivosIniciales, 300000);
 
   if (resultado.tipo === 'SIN_RESOLUCIONES') {
     return 'SIN_RESOLUCIONES';
   }
 
   const archivoDescargado = resultado.archivo;
-
   const codigoLimpio = String(municipio.value).replace(/\D/g, '');
 
   if (!archivoDescargado.includes(codigoLimpio)) {

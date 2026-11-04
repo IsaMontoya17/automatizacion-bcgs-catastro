@@ -26,6 +26,7 @@ function PanelMonitoreo({ ejecucionId, mes, anio, onNuevaEjecucion, onEjecucionI
     const [reporte, setReporte] = useState(null);
     const [reintentando, setReintentando] = useState({});
     const finRef = useRef(null);
+    const scrollPendienteRef = useRef(false);
 
     useEffect(() => {
         consultarEjecucion(ejecucionId)
@@ -42,6 +43,7 @@ function PanelMonitoreo({ ejecucionId, mes, anio, onNuevaEjecucion, onEjecucionI
         socket.emit('unirse_ejecucion', ejecucionId);
 
         function manejarProgreso(evento) {
+            scrollPendienteRef.current = true;
             setEventos((prev) => [...prev, evento]);
         }
 
@@ -62,6 +64,8 @@ function PanelMonitoreo({ ejecucionId, mes, anio, onNuevaEjecucion, onEjecucionI
     }, [ejecucionId]);
 
     useEffect(() => {
+        if (!scrollPendienteRef.current) return;
+        scrollPendienteRef.current = false;
         finRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [eventos]);
 
@@ -116,14 +120,6 @@ function PanelMonitoreo({ ejecucionId, mes, anio, onNuevaEjecucion, onEjecucionI
     const totalAEnviar = estadoReconstruccion === 'completa'
         ? (reporte.envio?.exitosos?.length ?? 0) + (reporte.envio?.requieren_revision_manual?.length ?? 0)
         : eventosEnvio.find((e) => e.tipo === 'inicio_envio')?.total;
-    const envioExitosos = reconstruido
-        ? reporte.envio?.exitosos?.length ?? 0
-        : eventosEnvio.filter((e) => e.tipo === 'envio_ok').length;
-    const envioRevisionManual = reconstruido
-        ? reporte.envio?.requieren_revision_manual?.length ?? 0
-        : eventosEnvio.filter((e) => e.tipo === 'envio_revision_manual').length;
-    const envioProcesados = envioExitosos + envioRevisionManual;
-    const envioPorcentaje = totalAEnviar ? Math.round((envioProcesados / totalAEnviar) * 100) : 0;
 
     let estatusDescarga;
     let estatusEnvio;
@@ -162,12 +158,21 @@ function PanelMonitoreo({ ejecucionId, mes, anio, onNuevaEjecucion, onEjecucionI
         return Array.from(estadoPorCodigo.values()).filter((e) => e.tipo === 'envio_revision_manual');
     }, [eventosEnvio, reconstruido, reporte]);
 
+    const envioExitosos = reporte?.envio
+        ? reporte.envio.exitosos?.length ?? 0
+        : eventosEnvio.filter((e) => e.tipo === 'envio_ok').length;
+    const envioRevisionManual = reporte?.envio
+        ? reporte.envio.requieren_revision_manual?.length ?? 0
+        : municipiosRevisionManual.length;
+    const envioProcesados = envioExitosos + envioRevisionManual;
+    const envioPorcentaje = totalAEnviar ? Math.round((envioProcesados / totalAEnviar) * 100) : 0;
+
     async function manejarReintentar(codigo) {
         setReintentando((prev) => ({ ...prev, [codigo]: true }));
         try {
             await reintentarEnvio(ejecucionId, [codigo]);
         } catch (err) {
-            
+
         } finally {
             setReintentando((prev) => ({ ...prev, [codigo]: false }));
         }
@@ -403,12 +408,12 @@ function PanelMonitoreo({ ejecucionId, mes, anio, onNuevaEjecucion, onEjecucionI
                                     </Row>
                                 </>
                             ) : estatus === 'completado' ? (
-                                <Alert 
-                                    type="info" 
-                                    showIcon 
-                                    message="Sin envíos programados" 
-                                    description="No se detectaron resoluciones para enviar en este periodo." 
-                                    style={{ marginTop: 16 }} 
+                                <Alert
+                                    type="info"
+                                    showIcon
+                                    message="Sin envíos programados"
+                                    description="No se detectaron resoluciones para enviar en este periodo."
+                                    style={{ marginTop: 16 }}
                                 />
                             ) : (
                                 <Text type="secondary">Preparando el envío de correos...</Text>
