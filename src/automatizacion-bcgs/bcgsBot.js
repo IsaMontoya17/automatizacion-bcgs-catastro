@@ -1,7 +1,7 @@
 const { clicRobusto, ingresarTextoAngular, hacerHoverElemento } = require('./browser');
 const { normalizarTexto } = require('../utils/utils');
 
-async function loginBcgs(page, url, usuario, password, municipio) {
+async function intentarLogin(page, url, usuario, password, municipio) {
   await page.goto(url, { waitUntil: 'networkidle2' });
 
   const campoUser = await page.waitForSelector('#usuario', { visible: true, timeout: 15000 });
@@ -46,16 +46,15 @@ async function loginBcgs(page, url, usuario, password, municipio) {
 
   let ingresoExitoso = false;
   for (let intento = 0; intento < 3 && !ingresoExitoso; intento++) {
-
     const botonPresente = await page.$('#ingresar').catch(() => null);
     if (botonPresente) {
       await clicRobusto(page, '#ingresar');
     }
     try {
-      await page.waitForSelector('#mGeografico', { visible: true, timeout: 8000 });
+      await page.waitForSelector('#mGeografico', { visible: true, timeout: 20000 });
       ingresoExitoso = true;
     } catch (err) {
-
+      
     }
   }
 
@@ -64,6 +63,22 @@ async function loginBcgs(page, url, usuario, password, municipio) {
   }
 }
 
+async function loginBcgs(page, url, usuario, password, municipio, { intentos = 3 } = {}) {
+  let ultimoError;
+
+  for (let i = 1; i <= intentos; i++) {
+    try {
+      await intentarLogin(page, url, usuario, password, municipio);
+      return;
+    } catch (err) {
+      ultimoError = err;
+      console.warn(`Login BCGS falló (intento ${i}/${intentos}): ${err.message}`);
+      if (i < intentos) await new Promise((r) => setTimeout(r, 5000));
+    }
+  }
+
+  throw ultimoError;
+}
 
 async function cambiarMunicipioSesion(page, nuevoMunicipio) {
   await clicRobusto(

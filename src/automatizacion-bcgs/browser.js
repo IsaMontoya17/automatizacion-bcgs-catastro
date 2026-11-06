@@ -5,8 +5,8 @@ const path = require('path');
 async function iniciarNavegador({ headless = false } = {}) {
   const browser = await puppeteer.launch({
     headless,
-    args: ['--start-maximized'],
-    defaultViewport: null,
+    args: ['--start-maximized', '--window-size=1920,1080'],
+    defaultViewport: headless ? { width: 1920, height: 1080 } : null,
   });
   const page = await browser.newPage();
   page.setDefaultTimeout(60000);
