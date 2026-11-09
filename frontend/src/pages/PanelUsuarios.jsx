@@ -168,7 +168,7 @@ function PanelUsuarios() {
             <Tooltip title={esMismoUsuario ? 'No puedes eliminar tu cuenta' : 'Eliminar usuario'}>
               <Popconfirm
                 title="¿Eliminar este usuario?"
-                description="No podrá eliminarse si cuenta con ejecuciones previas (RNF-08)."
+                description="No podrá eliminarse si cuenta con ejecuciones previas."
                 okText="Eliminar"
                 cancelText="Cancelar"
                 okButtonProps={{ danger: true }}
@@ -233,7 +233,7 @@ function PanelUsuarios() {
           style={{ background: '#fff', borderRadius: 8 }}
         />
 
-        <Modal
+<Modal
           title={usuarioEditando ? `Editar Usuario: ${usuarioEditando.usuario}` : 'Crear Nuevo Usuario'}
           open={modalAbierto}
           onCancel={cerrarModal}
@@ -242,11 +242,21 @@ function PanelUsuarios() {
           okText="Guardar"
           cancelText="Cancelar"
           destroyOnClose
+          centered
+          width={440}
+          styles={{
+            body: {
+              maxHeight: 'calc(100vh - 180px)',
+              overflowY: 'auto',
+              paddingRight: 6,
+            },
+          }}
         >
-          <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+          <Form form={form} layout="vertical" style={{ marginTop: 12 }}>
             <Form.Item
               name="nombre"
               label="Nombre Completo"
+              style={{ marginBottom: 12 }}
               rules={[{ required: true, message: 'El nombre es obligatorio.' }]}
             >
               <Input placeholder="Ej. Carlos Restrepo" />
@@ -255,6 +265,7 @@ function PanelUsuarios() {
             <Form.Item
               name="usuario"
               label="Nombre de Usuario (Login)"
+              style={{ marginBottom: 12 }}
               rules={[
                 { required: true, message: 'El usuario de acceso es obligatorio.' },
                 { min: 3, message: 'Mínimo 3 caracteres.' }
@@ -266,6 +277,7 @@ function PanelUsuarios() {
             <Form.Item
               name="rol"
               label="Rol"
+              style={{ marginBottom: 12 }}
               rules={[{ required: true, message: 'Selecciona un rol.' }]}
             >
               <Select
@@ -279,6 +291,7 @@ function PanelUsuarios() {
             <Form.Item
               name="password"
               label={usuarioEditando ? 'Contraseña (vacío para conservar actual)' : 'Contraseña'}
+              style={{ marginBottom: 4 }}
               rules={[
                 { required: !usuarioEditando, message: 'La contraseña es requerida.' },
                 { min: 8, message: 'Debe contener mínimo 8 caracteres.' },
