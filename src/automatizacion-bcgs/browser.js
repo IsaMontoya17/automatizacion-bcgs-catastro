@@ -24,7 +24,13 @@ async function configurarCarpetaDescargas(page, rutaDestino) {
 }
 
 function crearCarpetaMes(carpetaPrincipal, nombreMesTexto, anio) {
-  const rutaCarpeta = path.join(carpetaPrincipal, `${nombreMesTexto}_${anio}`);
+  const nombreBase = process.env.CARPETA_PRINCIPAL || carpetaPrincipal || 'envio_correos_mensuales';
+  const rutaCarpeta = path.join(process.cwd(), nombreBase, `${nombreMesTexto}_${anio}`);
+
+  if (fs.existsSync(rutaCarpeta)) {
+    fs.rmSync(rutaCarpeta, { recursive: true, force: true });
+  }
+
   fs.mkdirSync(rutaCarpeta, { recursive: true });
   return rutaCarpeta;
 }
