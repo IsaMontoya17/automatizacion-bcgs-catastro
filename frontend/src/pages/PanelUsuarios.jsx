@@ -38,7 +38,8 @@ function PanelUsuarios() {
     return usuarios.filter(
       (u) =>
         u.nombre.toLowerCase().includes(termino) ||
-        u.usuario.toLowerCase().includes(termino)
+        u.usuario.toLowerCase().includes(termino) ||
+        u.correo.toLowerCase().includes(termino)
     );
   }, [usuarios, busqueda]);
 
@@ -55,6 +56,7 @@ function PanelUsuarios() {
     form.setFieldsValue({
       nombre: item.nombre,
       usuario: item.usuario,
+      correo: item.correo,
       rol: item.rol,
     });
     setModalAbierto(true);
@@ -71,10 +73,13 @@ function PanelUsuarios() {
       const valores = await form.validateFields();
       setGuardando(true);
 
+      const correo = valores.correo.trim().toLowerCase();
+
       if (usuarioEditando) {
         const payload = {
           nombre: valores.nombre.trim(),
           usuario: valores.usuario.trim(),
+          correo,
           rol: valores.rol,
         };
         if (valores.password) payload.password = valores.password;
@@ -88,6 +93,7 @@ function PanelUsuarios() {
         const payload = {
           nombre: valores.nombre.trim(),
           usuario: valores.usuario.trim(),
+          correo,
           rol: valores.rol,
           password: valores.password,
         };
@@ -132,6 +138,12 @@ function PanelUsuarios() {
       key: 'usuario',
       render: (usr) => <Text code>{usr}</Text>,
       sorter: (a, b) => a.usuario.localeCompare(b.usuario),
+    },
+    {
+      title: 'Correo',
+      dataIndex: 'correo',
+      key: 'correo',
+      sorter: (a, b) => a.correo.localeCompare(b.correo),
     },
     {
       title: 'Rol',
@@ -217,7 +229,7 @@ function PanelUsuarios() {
             </Text>
           </Space>
           <Input.Search
-            placeholder="Buscar por nombre o usuario..."
+            placeholder="Buscar por nombre, usuario o correo..."
             allowClear
             style={{ width: 280 }}
             onChange={(e) => setBusqueda(e.target.value)}
@@ -233,7 +245,7 @@ function PanelUsuarios() {
           style={{ background: '#fff', borderRadius: 8 }}
         />
 
-<Modal
+        <Modal
           title={usuarioEditando ? `Editar Usuario: ${usuarioEditando.usuario}` : 'Crear Nuevo Usuario'}
           open={modalAbierto}
           onCancel={cerrarModal}
@@ -272,6 +284,19 @@ function PanelUsuarios() {
               ]}
             >
               <Input placeholder="Ej. crestrepo" />
+            </Form.Item>
+
+            <Form.Item
+              name="correo"
+              label="Correo electrónico"
+              extra="Se usa para recuperar la contraseña."
+              style={{ marginBottom: 12 }}
+              rules={[
+                { required: true, whitespace: true, message: 'El correo es obligatorio.' },
+                { type: 'email', message: 'Ingresa un correo válido.' },
+              ]}
+            >
+              <Input placeholder="Ej. crestrepo@antioquia.gov.co" />
             </Form.Item>
 
             <Form.Item

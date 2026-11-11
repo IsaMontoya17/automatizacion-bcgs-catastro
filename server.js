@@ -5,12 +5,12 @@ const cors = require('cors');
 const prisma = require('./src/config/prisma');
 const { ejecutarDescargaResoluciones } = require('./src/automatizacion-bcgs/descargarResoluciones');
 const { ejecutarEnvioCorreos, reintentarEnvioMunicipios } = require('./src/correo/enviarCorreos');
-const { login } = require('./src/auth/authController');
 const { verificarToken, requiereRol } = require('./src/auth/authMiddleware');
 const { listarMunicipios, actualizarCorreosMunicipio } = require('./src/automatizacion-bcgs/municipiosController');
 const { obtenerPlantilla, actualizarPlantilla } = require('./src/correo/plantillaController');
 const { listarCorreosNotificacion, agregarCorreoNotificacion, eliminarCorreoNotificacion } = require('./src/correo/notificacionController');
 const { listarUsuarios, crearUsuario, actualizarUsuario, eliminarUsuario } = require('./src/usuarios/usuariosController');
+const { login, solicitarRecuperacion, restablecerPassword } = require('./src/auth/authController');
 
 const app = express();
 app.use(express.json());
@@ -34,6 +34,9 @@ const ejecuciones = new Map();
 let hayEjecucionEnProgreso = false;
 
 app.post('/api/auth/login', login);
+
+app.post('/api/auth/recuperar/solicitar', solicitarRecuperacion);
+app.post('/api/auth/recuperar/restablecer', restablecerPassword);
 
 app.post('/api/descargas', verificarToken, async (req, res) => {
   const { mes, anio } = req.body;

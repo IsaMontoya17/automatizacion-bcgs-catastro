@@ -44,6 +44,28 @@ async function login(usuario, password) {
   return data;
 }
 
+export async function solicitarRecuperacion(identificador) {
+  const res = await fetch(`${API_URL}/api/auth/recuperar/solicitar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ identificador }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'No se pudo enviar el código.');
+  return data;
+}
+
+export async function restablecerPassword(identificador, codigo, nuevaPassword) {
+  const res = await fetch(`${API_URL}/api/auth/recuperar/restablecer`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ identificador, codigo, nuevaPassword }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'No se pudo restablecer la contraseña.');
+  return data;
+}
+
 async function iniciarDescarga(mes, anio) {
   const res = await apiFetch('/api/descargas', {
     method: 'POST',

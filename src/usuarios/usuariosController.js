@@ -3,11 +3,20 @@ const prisma = require('../config/prisma');
 
 const ROLES_VALIDOS = ['administrador', 'usuario'];
 const RONDAS_HASH = 10;
+const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const CAMPOS_PUBLICOS = { id: true, nombre: true, usuario: true, correo: true, rol: true };
+
+// Devuelve el correo normalizado, null si viene vacío, o undefined si no se envió
+function normalizarCorreo(correo) {
+  if (correo === undefined) return undefined;
+  if (correo === null || !String(correo).trim()) return null;
+  return String(correo).trim().toLowerCase();
+}
 
 async function listarUsuarios(req, res) {
   try {
     const usuarios = await prisma.usuario.findMany({
-      select: { id: true, nombre: true, usuario: true, rol: true },
+      select: CAMPOS_PUBLICOS,
       orderBy: { nombre: 'asc' },
     });
     res.json(usuarios);
@@ -19,15 +28,19 @@ async function listarUsuarios(req, res) {
 
 async function crearUsuario(req, res) {
   const { nombre, usuario, password, rol } = req.body || {};
+  const correo = normalizarCorreo(req.body?.correo);
 
-  if (!nombre?.trim() || !usuario?.trim() || !password || !rol) {
-    return res.status(400).json({ error: 'Debes enviar nombre, usuario, password y rol.' });
+  if (!nombre?.trim() || !usuario?.trim() || !correo || !password || !rol) {
+    return res.status(400).json({ error: 'Debes enviar nombre, usuario, correo, password y rol.' });
   }
   if (!ROLES_VALIDOS.includes(rol)) {
     return res.status(400).json({ error: `El rol debe ser uno de: ${ROLES_VALIDOS.join(', ')}.` });
   }
   if (password.length < 8) {
     return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres.' });
+  }
+  if (!REGEX_CORREO.test(correo)) {
+    return res.status(400).json({ error: 'El correo no tiene un formato válido.' });
   }
 
   try {
@@ -36,10 +49,15 @@ async function crearUsuario(req, res) {
       return res.status(409).json({ error: 'Ya existe un usuario con ese nombre de usuario.' });
     }
 
+    const correoEnUso = await prisma.usuario.findUnique({ where: { correo } });
+    if (correoEnUso) {
+      return res.status(409).json({ error: 'Ya existe un usuario con ese correo.' });
+    }
+
     const passwordHash = await bcrypt.hash(password, RONDAS_HASH);
     const creado = await prisma.usuario.create({
-      data: { nombre: nombre.trim(), usuario: usuario.trim(), passwordHash, rol },
-      select: { id: true, nombre: true, usuario: true, rol: true },
+      data: { nombre: nombre.trim(), usuario: usuario.trim(), correo, passwordHash, rol },
+      select: CAMPOS_PUBLICOS,
     });
 
     res.status(201).json(creado);
@@ -54,12 +72,19 @@ async function actualizarUsuario(req, res) {
   if (!id) return res.status(400).json({ error: 'Id de usuario inválido.' });
 
   const { nombre, usuario, rol, password } = req.body || {};
+  const correo = normalizarCorreo(req.body?.correo);
 
   if (rol && !ROLES_VALIDOS.includes(rol)) {
     return res.status(400).json({ error: `El rol debe ser uno de: ${ROLES_VALIDOS.join(', ')}.` });
   }
   if (password && password.length < 8) {
     return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres.' });
+  }
+  if (correo === null) {
+    return res.status(400).json({ error: 'El correo no puede quedar vacío.' });
+  }
+  if (correo && !REGEX_CORREO.test(correo)) {
+    return res.status(400).json({ error: 'El correo no tiene un formato válido.' });
   }
 
   try {
@@ -75,6 +100,14 @@ async function actualizarUsuario(req, res) {
       data.usuario = usuario.trim();
     }
 
+    if (correo) {
+      const correoEnUso = await prisma.usuario.findUnique({ where: { correo } });
+      if (correoEnUso && correoEnUso.id !== id) {
+        return res.status(409).json({ error: 'Ya existe otro usuario con ese correo.' });
+      }
+      data.correo = correo;
+    }
+
     if (password) data.passwordHash = await bcrypt.hash(password, RONDAS_HASH);
 
     if (Object.keys(data).length === 0) {
@@ -84,7 +117,7 @@ async function actualizarUsuario(req, res) {
     const actualizado = await prisma.usuario.update({
       where: { id },
       data,
-      select: { id: true, nombre: true, usuario: true, rol: true },
+      select: CAMPOS_PUBLICOS,
     });
 
     res.json(actualizado);

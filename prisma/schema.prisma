@@ -8,12 +8,16 @@ datasource db {
 }
 
 model Usuario {
-  id            Int         @id @default(autoincrement())
-  nombre        String
-  usuario       String      @unique
-  passwordHash  String      @map("password_hash")
-  rol           String
-  ejecuciones   Ejecucion[]
+  id                       Int         @id @default(autoincrement())
+  nombre                   String
+  usuario                  String      @unique
+    correo                 String      @unique
+  passwordHash             String      @map("password_hash")
+  rol                      String
+  codigoRecuperacionHash   String?     @map("codigo_recuperacion_hash")
+  codigoRecuperacionExpira DateTime?   @map("codigo_recuperacion_expira")
+  intentosRecuperacion     Int         @default(0) @map("intentos_recuperacion")
+  ejecuciones              Ejecucion[]
 
   @@map("usuarios")
 }

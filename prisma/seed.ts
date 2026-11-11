@@ -3,6 +3,11 @@ import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
+// Correos de las cuentas iniciales: deben ser distintos entre sí (el campo es único)
+// y estar en minúsculas, igual que como los guarda el panel de usuarios.
+const CORREO_ADMIN = 'isabelamontoyaalarcon@gmail.com';
+const CORREO_PRUEBA = 'isabelamontoyaalarcon+prueba@gmail.com';
+
 const MUNICIPIOS: { codigo: string; nombre: string }[] = [
   { codigo: '129', nombre: 'CALDAS' },
   { codigo: '360', nombre: 'ITAGUÍ' },
@@ -140,11 +145,12 @@ async function sembrarUsuarios() {
     create: {
       nombre: 'Isabela Montoya Alarcón',
       usuario: 'admin',
+      correo: CORREO_ADMIN,
       passwordHash: claveAdmin,
       rol: 'administrador',
     },
   });
-  console.log(`✓ Usuario verificado/creado: ${admin.usuario}`);
+  console.log(`✓ Usuario verificado/creado: ${admin.usuario} (${admin.correo})`);
 
   // 2. Usuario Estándar (Rol Usuario)
   const claveUser = await bcrypt.hash('UsuarioCatastro2026*', 10);
@@ -154,11 +160,12 @@ async function sembrarUsuarios() {
     create: {
       nombre: 'Prueba Uno',
       usuario: 'Prueba001',
+      correo: CORREO_PRUEBA,
       passwordHash: claveUser,
       rol: 'usuario',
     },
   });
-  console.log(`✓ Usuario verificado/creado: ${operador.usuario}`);
+  console.log(`✓ Usuario verificado/creado: ${operador.usuario} (${operador.correo})`);
 }
 
 async function sembrarMunicipios() {
